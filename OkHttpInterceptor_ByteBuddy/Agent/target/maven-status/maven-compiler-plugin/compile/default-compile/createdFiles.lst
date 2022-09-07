@@ -1,1 +1,2 @@
-org/example/OkHttpAgent.class
+org/example/agent/OkHttpAgent.class
+org/example/advice/OkHttpAdvice.class

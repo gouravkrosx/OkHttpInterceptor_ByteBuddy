@@ -24,7 +24,7 @@
               <transformers>
                 <transformer>
                   <manifestEntries>
-                    <Premain-Class>org.example.OkHttpAgent</Premain-Class>
+                    <Premain-Class>org.example.agent.OkHttpAgent</Premain-Class>
                   </manifestEntries>
                 </transformer>
               </transformers>
