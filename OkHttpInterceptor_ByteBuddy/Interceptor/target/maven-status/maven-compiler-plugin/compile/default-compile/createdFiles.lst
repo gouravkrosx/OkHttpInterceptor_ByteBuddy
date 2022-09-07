@@ -1,0 +1,4 @@
+org/example/HttpInterceptor.class
+org/example/OkHttpInterceptor.class
+org/example/ConstructorInterceptor.class
+org/example/OkHttpTransformer.class
