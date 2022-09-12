@@ -20,6 +20,6 @@ public class ConstructorInterceptor {
 
         System.out.println("Constructor Interceptor was called for: " + method);
         client.call();
-//        okHttpClient.interceptors().add(new HttpInterceptor());
+        okHttpClient.interceptors().add(new HttpInterceptor());
     }
 }

@@ -1,13 +1,21 @@
 package org.example.agent;
 
+import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.dynamic.ClassFileLocator;
+import net.bytebuddy.dynamic.DynamicType;
+import net.bytebuddy.dynamic.scaffold.TypeValidation;
 import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.matcher.ElementMatchers;
-import okhttp3.OkHttpClient;
+import net.bytebuddy.pool.TypePool;
+import net.bytebuddy.utility.JavaModule;
 import org.example.ConstructorInterceptor;
 import org.example.advice.OkHttpAdvice;
 
 import java.lang.instrument.Instrumentation;
+import java.security.ProtectionDomain;
 
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
@@ -54,34 +62,51 @@ public class OkHttpAgent {
         //.with(AgentBuilder.TypeStrategy.Default.REBASE)
 
 
-        String name = OkHttpClient.Builder.class.getName();
-        String canonicalName = OkHttpClient.Builder.class.getCanonicalName();
-        String simpleName = OkHttpClient.Builder.class.getSimpleName();
-        String typeName = OkHttpClient.Builder.class.getTypeName();
+//        String name = OkHttpClient.Builder.class.getName();
+//        String canonicalName = OkHttpClient.Builder.class.getCanonicalName();
+//        String simpleName = OkHttpClient.Builder.class.getSimpleName();
+//        String typeName = OkHttpClient.Builder.class.getTypeName();
+//
+//        System.out.println("------------------------------------------------------------");
+//        System.out.println("name: " + name);
+//        System.out.println("canonicalName: " + canonicalName);
+//        System.out.println("simpleName: " + simpleName);
+//        System.out.println("typeName: " + typeName);
+//        System.out.println("------------------------------------------------------------");
 
-        System.out.println("------------------------------------------------------------");
-        System.out.println("name: " + name);
-        System.out.println("canonicalName: " + canonicalName);
-        System.out.println("simpleName: " + simpleName);
-        System.out.println("typeName: " + typeName);
-        System.out.println("------------------------------------------------------------");
+// ------------------------------------- 1 --------------------------------------------
+//new ByteBuddy().with(TypeValidation.DISABLED)
 
 //        new AgentBuilder.Default()
-////                .with(AgentBuilder.Listener.StreamWriting.toSystemOut())
+//                .with(AgentBuilder.Listener.StreamWriting.toSystemOut())
 //                .type(ElementMatchers.named("okhttp3.OkHttpClient$Builder")).transform((builder, typeDescription, classLoader, javaModule, protectionDomain) -> {
 //                    System.out.println("Transformer: adding custom okhttpinterceptor using agent: " + typeDescription.getName());
-//                    return builder.constructor(ElementMatchers.takesArgument(1, OkHttpClient.class))
-//                            .intercept(MethodDelegation.to(ConstructorInterceptor.class));
+//                    return builder.constructor(takesArgument(1, ElementMatchers.named("okhttp3.OkHttpClient")))
+//                            .intercept(MethodDelegation.to(TypePool.Default.ofSystemLoader().describe("org.example.ConstructorInterceptor").resolve()));
 //                }).installOn(instrumentation);
 
 
+// ------------------------------------- 2 --------------------------------------------
+
         // Using Advice to intercept constructor of OkHttpClient
+//        new AgentBuilder.Default()
+//                .with(AgentBuilder.Listener.StreamWriting.toSystemOut())
+//                .type(ElementMatchers.named("okhttp3.OkHttClient$Builder"))
+//                .transform(new AgentBuilder.Transformer.ForAdvice()
+//                        .advice(isConstructor().and(takesArgument(1,ElementMatchers.named("okhttp3.OkHttpClient"))), "org.example.advice.OkHttpAdvice"))
+//                .installOn(instrumentation);
+
+
+// ------------------------------------- 3 --------------------------------------------
+
+        //different way to delegate the call to advices
         new AgentBuilder.Default()
                 .with(AgentBuilder.Listener.StreamWriting.toSystemOut())
-                .type(ElementMatchers.named("okhttp3.OkHttpClient$Builder"))
-                .transform(new AgentBuilder.Transformer.ForAdvice()
-                        .advice(ElementMatchers.isConstructor().and(ElementMatchers.takesArguments(1)), OkHttpAdvice.class.getName()))
-                .installOn(instrumentation);
-
+                .type(named("okhttp3.OkHttpClient$Builder"))
+                .transform((builder, typeDescription, classLoader, javaModule, protectionDomain) -> {
+                    System.out.println("Inside Transformer (Advice)");
+                    return builder.method(ElementMatchers.isConstructor().and(takesArgument(1, named("okhttp3.OkHttpClient"))))
+                            .intercept(Advice.to(TypePool.Default.ofSystemLoader().describe("org.example.advice.OkHttpAdvice").resolve(), ClassFileLocator.ForClassLoader.ofSystemLoader()));
+                }).installOn(instrumentation);
     }
 }
