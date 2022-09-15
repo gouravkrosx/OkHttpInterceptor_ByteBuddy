@@ -1,0 +1,7 @@
+Hello from premain
+Hello OkHttpClient!
+Inside Transformer (Builder constructor)
+onEnter: method in the okhttpAdvice-> public final okhttp3.OkHttpClient okhttp3.OkHttpClient$Builder.build()
+onExit: method in the okhttpAdvice-> public final okhttp3.OkHttpClient okhttp3.OkHttpClient$Builder.build()
+Response Response{protocol=h2, code=201, message=, url=https://reqres.in/api/users}
+Body {"id":"446","createdAt":"2022-09-14T11:11:06.992Z"}

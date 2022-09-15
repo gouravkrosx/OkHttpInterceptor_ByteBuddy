@@ -2,6 +2,7 @@ package org.example.agent;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.agent.builder.AgentBuilder;
+
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.ClassFileLocator;
@@ -11,8 +12,8 @@ import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.pool.TypePool;
 import net.bytebuddy.utility.JavaModule;
-import org.example.ConstructorInterceptor;
-import org.example.advice.OkHttpAdvice;
+import okhttp3.OkHttpClient;
+
 
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
@@ -78,11 +79,11 @@ public class OkHttpAgent {
 //new ByteBuddy().with(TypeValidation.DISABLED)
 
 //        new AgentBuilder.Default()
-//                .with(AgentBuilder.Listener.StreamWriting.toSystemOut())
+////                .with(AgentBuilder.Listener.StreamWriting.toSystemOut())
 //                .type(ElementMatchers.named("okhttp3.OkHttpClient$Builder")).transform((builder, typeDescription, classLoader, javaModule, protectionDomain) -> {
 //                    System.out.println("Transformer: adding custom okhttpinterceptor using agent: " + typeDescription.getName());
 //                    return builder.constructor(takesArgument(1, ElementMatchers.named("okhttp3.OkHttpClient")))
-//                            .intercept(MethodDelegation.to(TypePool.Default.ofSystemLoader().describe("org.example.ConstructorInterceptor").resolve()));
+//                            .intercept(MethodDelegation.to(TypePool.Default.ofSystemLoader().describe("org.example.ConstructorInterceptor").resolve()).andThen(SuperMethodCall.INSTANCE));
 //                }).installOn(instrumentation);
 
 
@@ -100,13 +101,73 @@ public class OkHttpAgent {
 // ------------------------------------- 3 --------------------------------------------
 
         //different way to delegate the call to advices
-        new AgentBuilder.Default()
-                .with(AgentBuilder.Listener.StreamWriting.toSystemOut())
+//        new AgentBuilder.Default(new ByteBuddy().with(TypeValidation.DISABLED))
+////                .with(AgentBuilder.Listener.StreamWriting.toSystemOut())
+//                .type(named("okhttp3.OkHttpClient$Builder"))
+//                .transform((builder, typeDescription, classLoader, javaModule, protectionDomain) -> {
+//                    System.out.println("Inside Transformer (Advice)");
+//                    return builder.constructor(any())
+////                    return builder.constructor(any())
+//                            .intercept(Advice.to(TypePool.Default.ofSystemLoader().describe("org.example.advice.OkHttpAdvice").resolve(), ClassFileLocator.ForClassLoader.ofSystemLoader()));
+//                }).installOn(instrumentation);
+
+
+//------------------------------------ 4 - working great ---------------------------------------------
+        // intercepting build() method of OkHttpClient.Builder
+
+//        new AgentBuilder.Default(new ByteBuddy().with(TypeValidation.DISABLED))
+////                .with(AgentBuilder.Listener.StreamWriting.toSystemOut())
+//                .type(named("okhttp3.OkHttpClient$Builder"))
+//                .transform(((builder, typeDescription, classLoader, javaModule, protectionDomain) -> {
+//                    System.out.println("Inside BuildInterceptor Transformer");
+//                    return builder.method(ElementMatchers.named("build")).intercept(MethodDelegation.to(TypePool.Default.ofSystemLoader().describe("org.example.BuildInterceptor").resolve()));
+//                })).installOn(instrumentation);
+
+//------------------------------------ 5 - working great -----------------------------------------------
+
+        // intercepting newBuilder() method of okhttpclient in order to add our own interceptor using the returned builder.
+
+//        new AgentBuilder.Default(new ByteBuddy().with(TypeValidation.DISABLED))
+////                .with(AgentBuilder.Listener.StreamWriting.toSystemOut())
+//                .type(named("okhttp3.OkHttpClient"))
+//                .transform((builder, typeDescription, classLoader, javaModule, protectionDomain) -> {
+//                    System.out.println("Inside BuilderInterceptor Transformer");
+//
+//                    return builder.method(any().and(returns(OkHttpClient.Builder.class)))
+//////                            .intercept(Advice.to(TypePool.Default.ofSystemLoader().describe("org.example.advice.OkHttpAdvice").resolve(), ClassFileLocator.ForClassLoader.ofSystemLoader()));
+//                            .intercept(MethodDelegation.to(TypePool.Default.ofSystemLoader().describe("org.example.BuilderInterceptor").resolve()));
+//                }).installOn(instrumentation);
+
+
+//-------------------------------------------- 6 - working perfectly fine  -----------------------------------------------
+//         intercepting constructor of OkHttpClient.Builder
+
+//        new AgentBuilder.Default(new ByteBuddy().with(TypeValidation.DISABLED))
+////                .with(AgentBuilder.Listener.StreamWriting.toSystemOut())
+//                .type(named("okhttp3.OkHttpClient$Builder"))
+//                .transform(((builder, typeDescription, classLoader, javaModule, protectionDomain) -> {
+//                    System.out.println("Inside Transformer (Builder constructor)");
+//                    return builder.constructor(isDefaultConstructor()).intercept(Advice.to(TypePool.Default.ofSystemLoader().describe("org.example.advice.OkHttpAdvice").resolve(), ClassFileLocator.ForClassLoader.ofSystemLoader()));
+//                })).installOn(instrumentation);
+
+
+//-------------------------------------- 7 ------------------------------------
+// merging the transformer due to 3 different ways to create a OkHttpClient
+
+//        OkHttpClient client = new OkHttpClient().newBuilder().build();  // if used constructor interceptor using advice in this case then it get called 2 times.
+
+//        OkHttpClient client = new OkHttpClient.Builder().build();
+
+//        OkHttpClient client = new OkHttpClient();
+
+        new AgentBuilder.Default(new ByteBuddy().with(TypeValidation.DISABLED))
+//                .with(AgentBuilder.Listener.StreamWriting.toSystemOut())
                 .type(named("okhttp3.OkHttpClient$Builder"))
-                .transform((builder, typeDescription, classLoader, javaModule, protectionDomain) -> {
-                    System.out.println("Inside Transformer (Advice)");
-                    return builder.method(ElementMatchers.isConstructor().and(takesArgument(1, named("okhttp3.OkHttpClient"))))
-                            .intercept(Advice.to(TypePool.Default.ofSystemLoader().describe("org.example.advice.OkHttpAdvice").resolve(), ClassFileLocator.ForClassLoader.ofSystemLoader()));
-                }).installOn(instrumentation);
+                .transform(((builder, typeDescription, classLoader, javaModule, protectionDomain) -> {
+                    System.out.println("Inside Merged Transformer (Builder constructor)");
+                    return builder
+                            .constructor(isDefaultConstructor()).intercept(Advice.to(TypePool.Default.ofSystemLoader().describe("org.example.advice.OkHttpAdvice").resolve(), ClassFileLocator.ForClassLoader.ofSystemLoader()))
+                            .method(ElementMatchers.named("build")).intercept(MethodDelegation.to(TypePool.Default.ofSystemLoader().describe("org.example.BuildInterceptor").resolve()));
+                })).installOn(instrumentation);
     }
 }

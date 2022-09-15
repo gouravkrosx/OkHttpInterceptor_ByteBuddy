@@ -1,0 +1,16 @@
+Hello from premain
+Hello OkHttpClient!
+Inside Merged Transformer (Builder constructor)
+Inside OnMethodEnter advice-> public okhttp3.OkHttpClient$Builder()
+Inside OnMethodExit advice -> public okhttp3.OkHttpClient$Builder()
+Inside OnMethodEnter advice-> public okhttp3.OkHttpClient$Builder()
+Inside OnMethodExit advice -> public okhttp3.OkHttpClient$Builder()
+Build Interceptor was called for: public final okhttp3.OkHttpClient okhttp3.OkHttpClient$Builder.build()
+Inside HttpInterceptor before next()
+Inside HttpInterceptor before next()
+Inside HttpInterceptor before next()
+Inside HttpInterceptor after next()
+Inside HttpInterceptor after next()
+Inside HttpInterceptor after next()
+Response Response{protocol=h2, code=201, message=, url=https://reqres.in/api/users}
+Body {"id":"464","createdAt":"2022-09-15T05:57:42.205Z"}

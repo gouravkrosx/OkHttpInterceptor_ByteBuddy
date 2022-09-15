@@ -22,9 +22,15 @@ public class OkHttpClientApp {
 //                .addInterceptor(new MyOkInterceptor())
 //                .build();
 
+        OkHttpClient client = new OkHttpClient().newBuilder().build();
 
-        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient.Builder().build();
+//        OkHttpClient client = new OkHttpClient.Builder().build();
 
+//        OkHttpClient client = new OkHttpClient();
+
+
+
+//        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient.Builder().build();
 
 //        Request request = new Request.Builder()
 //                .url("https://reqres.in/api/users/2")

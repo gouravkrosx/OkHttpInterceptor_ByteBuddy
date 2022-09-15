@@ -1,0 +1,8 @@
+Hello from premain
+Hello OkHttpClient!
+Inside Transformer (Builder constructor)
+Build Interceptor was called for: public final okhttp3.OkHttpClient okhttp3.OkHttpClient$Builder.build()
+Inside HttpInterceptor before next()
+Inside HttpInterceptor after next()
+Response Response{protocol=h2, code=201, message=, url=https://reqres.in/api/users}
+Body {"id":"703","createdAt":"2022-09-14T11:25:03.999Z"}
